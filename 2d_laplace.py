@@ -11,12 +11,10 @@ plt.ion()
 ##variable declarations
 nx = 31
 ny = 31
-nt = 1000
+nt = 100
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
-sigma = .5
-dt = sigma*dx*dy
 
 
 ##initial conditions
@@ -57,6 +55,8 @@ for n in range(nt):
 	p[:,-1] = y		##p = y @ x = 2
 	p[0,:] = p[1,:]		##dp/dy = 0 @ y = 0
 	p[-1,:] = p[-2,:]	##dp/dy = 0 @ y = 1
+	l1norm = (np.sum(np.abs(p[:])-np.abs(pn[:])))/np.sum(np.abs(pn[:]))
+	print l1norm
 	if n%50 == 0:
 		surf.remove()
 		surf = ax.plot_surface(X,Y,p[:], rstride=1, cstride=1, cmap=cm.coolwarm,

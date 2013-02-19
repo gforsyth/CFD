@@ -11,7 +11,7 @@ plt.ion()
 ##variable declarations
 nx = 41
 ny = 41
-nt =300  
+nt =10000  
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
@@ -87,8 +87,11 @@ for n in range(nt):
 	p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
 	p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
 	p[:,-1]=p[:,-2]		##dp/dx = 0 at x = 2
-	if n%25 == 0:
-		myplot.remove()
-		myplot = plt.streamplot(X,Y,u,v)
-		plt.show()
-		wait = raw_input('enter to continue')
+#	if n%25 == 0:
+#		myplot.clear()
+#		plt.streamplot(X,Y,u,v)
+#		plt.show()
+#		wait = raw_input('')
+plt.streamplot(X,Y,u,v)
+plt.show()
+wait = raw_input('')

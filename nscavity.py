@@ -11,14 +11,13 @@ plt.ion()
 ##variable declarations
 nx = 41
 ny = 41
-nt =100  
+nt =300  
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
-x = np.linspace(0,2,nx)
-y = np.linspace(0,2,ny)
+X = np.linspace(0,2,nx)
+Y = np.linspace(0,2,ny)
 
-Y,X = np.meshgrid(y,x)
 
 ##physical variables
 rho = .2
@@ -36,12 +35,9 @@ p = np.zeros((ny,nx)) ##create a XxY vector of 0's
 pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
 
-#Y,X = np.mgrid[0:2:31j,0:2:31j]
 
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-surf = ax.plot_wireframe(X,Y,p[:])
-plt.draw()
+myplot = plt.streamplot(X,Y,u,v)
+plt.show()
 
 for n in range(nt):
 	un[:] = u[:]
@@ -78,24 +74,21 @@ for n in range(nt):
 ###0	.	.	.	.	.
 ###     0	1	2	3	4
 
-#	u[0,:] = 0
-#	u[:,0] = 0
-#	u[:,-1] = 0
-#	v[0,:] = 0
-#	v[-1,:]=0
-#	v[:,0] = 0
-#	v[:,-1] = 0
+	u[0,:] = 0
+	u[:,0] = 0
+	u[:,-1] = 0
+	v[0,:] = 0
+	v[-1,:]=0
+	v[:,0] = 0
+	v[:,-1] = 0
 	
-	u[:]=0
-	v[:]=0
 	u[-1,:] = 1		## at y = 2 where u = 1
 	p[-1,:] = 0		##p = 0 at y = 2
 	p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
 	p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
 	p[:,-1]=p[:,-2]		##dp/dx = 0 at x = 2
-#	plt.streamplot(X,Y,u,v)
-#	plt.show()
-	print p
-	surf = ax.plot_wireframe(X,Y,p[:])
-	plt.draw()
-	wait = raw_input('enter to continue')
+	if n%25 == 0:
+		myplot.remove()
+		myplot = plt.streamplot(X,Y,u,v)
+		plt.show()
+		wait = raw_input('enter to continue')

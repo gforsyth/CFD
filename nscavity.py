@@ -52,10 +52,10 @@ for n in range(nt):
 		(2*(dx**2+dy**2)) -\
 		dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
 	
-	p[-1,:] = 0		##p = 0 at y = 2
+	p[-1,:] =p[-2,:]		##p = 0 at y = 2
 	p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
 	p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
-	p[:,-1]=p[:,-2]		##dp/dx = 0 at x = 2
+	p[:,-1]=0		##dp/dx = 0 at x = 2
 
 	u[1:-1,1:-1] = un[1:-1,1:-1]-\
 		un[1:-1,1:-1]*dt/dx*(un[1:-1,1:-1]-un[0:-2,1:-1])-\
@@ -73,34 +73,17 @@ for n in range(nt):
 
 	u[0,:] = 0
 	u[:,0] = 0
-	u[:,-1] = 0
+	u[:,-1] = 1
 	v[0,:] = 0
 	v[-1,:]=0
 	v[:,0] = 0
 	v[:,-1] = 0
-	u[-1,:] = 1		## at y = 2 where u = 1
-	
-#	if n%10 == 0:
-		#plt.clf()
-		#plt.streamplot(X,Y,u,v)
-		#plt.contour(X,Y,p)
-	#	print p
-	#	wait = raw_input('')
-###
-###7	.	.	.	.	.
-###6	.	.	.	.	.
-###5	.	.	.	.	.
-###4	.	.	.	.	.
-###3	.	.	.	.	.
-###2	.	.	.	.	.
-###1	.	.	.	.	.
-###0	.	.	.	.	.
-###     0	1	2	3	4
+	u[-1,:] = 0		## at y = 2 where u = 1
 
-#ax1.streamplot(X,Y,u,v)
-#ax2.streamplot(X,Y,u,v)
-#plt.show()
-#wait = raw_input('')
-#plt.close()
+plt.figure()
+plt.contourf(X,Y,p)
+plt.quiver(X,Y,u,v)
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Pressure contour')
 
-plt.plot(x,p)

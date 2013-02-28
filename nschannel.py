@@ -9,12 +9,10 @@ import time
 
 plt.ion()
 
-#anicheck = raw_input('Do you want to animate the results?(y/n): ')
-
 ##variable declarations
 nx = 21
 ny = 21
-nt = 300
+nt = 10 
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
@@ -43,8 +41,8 @@ pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 b = np.zeros((ny,nx))
 
 
-fix = plt.figure()
-ax = fix.gca(projection='3d')
+#plt.quiver(X,Y,u,v)
+#plt.show()
 
 for n in range(nt):
 	un[:] = u[:]
@@ -135,16 +133,8 @@ for n in range(nt):
 	v[:,0] = 0
 	v[:,-1]=0
 
-	if n%10==0:
-		ax.plot_wireframe(X,Y,u)
-		ax.plot_wireframe(X,Y,v)
-		plt.show()
-
-#plt.figure()
-#plt.contourf(X,Y,p,alpha=0.5)
-#plt.colorbar()
-#plt.contour(X,Y,p)
-#plt.xlabel('X')
-#plt.ylabel('Y')
-#plt.title('Pressure contour')
-#wait = raw_input('')
+plt.quiver(X,Y,u,v,scale=2.5)
+plt.show()
+for i in range(nx):
+	plt.plot(x[i]+u[i,:],y)
+plt.xlim(0,2)

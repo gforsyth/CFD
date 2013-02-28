@@ -11,10 +11,10 @@ plt.ion()
 anicheck = raw_input('Do you want to animate the results?(y/n): ')
 
 ##variable declarations
-nx = 21
-ny = 21
-#nt = input('Number of timesteps: ') 
-nt = 100
+nx = 41
+ny = 41
+nt = 700
+nit=50
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
@@ -27,9 +27,8 @@ Y,X = np.meshgrid(y,x)
 rho = 1
 nu = .1
 
-#dt = input('Enter dt: ') 
-dt = .01
-#initial conditions
+dt = .001
+
 u = np.zeros((ny,nx)) ##create a XxY vector of 0's
 un = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
@@ -41,27 +40,26 @@ pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
 b = np.zeros((ny,nx))
 
+
 plt.figure()
 for n in range(nt):
 	un[:] = u[:]
 	vn[:] = v[:]
-	pn[:] = p[:]
-	
+
 	b[1:-1,1:-1]=rho*(1/dt*((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx)+(v[1:-1,2:]-v[1:-1,0:-2])/(2*dy))-\
 		((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx))**2-\
 		2*((u[1:-1,2:]-u[1:-1,0:-2])/(2*dy)*(v[2:,1:-1]-v[0:-2,1:-1])/(2*dx))-\
 		((v[1:-1,2:]-v[1:-1,0:-2])/(2*dy))**2)	
-
-
-
-	p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
-		(2*(dx**2+dy**2)) -\
-		dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
-	
-	p[-1,:] =p[-2,:]		##p = 0 at y = 2
-	p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
-	p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
-	p[:,-1]=0		##dp/dx = 0 at x = 2
+	for q in range(nit):
+		pn[:] = p[:]
+		p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
+			(2*(dx**2+dy**2)) -\
+			dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
+		
+		p[-1,:] =p[-2,:]		##p = 0 at y = 2
+		p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
+		p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
+		p[:,-1]=0		##dp/dx = 0 at x = 2
 
 	u[1:-1,1:-1] = un[1:-1,1:-1]-\
 		un[1:-1,1:-1]*dt/dx*(un[1:-1,1:-1]-un[0:-2,1:-1])-\
@@ -90,9 +88,11 @@ for n in range(nt):
 	if anicheck=='y' and n%5==0:
 		plt.clf()
 		plt.contourf(X,Y,p)
-		plt.quiver(X,Y,u,v)
-		plt.show()
-		wait = raw_input('')
+		plt.quiver(X,Y,u,v, scale=3)
+		plt.draw()
+	if anicheck=='n':
+		plt.close()
+
 plt.figure()
 plt.contourf(X,Y,p,alpha=0.5)
 plt.colorbar()
@@ -101,4 +101,8 @@ plt.quiver(X,Y,u,v)
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Pressure contour')
-wait = raw_input('')
+
+plt.figure()
+plt.streamplot(x,y,np.transpose(u),np.transpose(v))
+plt.contourf(X,Y,p,alpha=0.5)
+

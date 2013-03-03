@@ -13,7 +13,7 @@ anicheck = raw_input('Do you want to animate the results?(y/n): ')
 ##variable declarations
 nx = 41
 ny = 41
-nt = 700
+nt = 500
 nit=50
 c = 1
 dx = 2.0/(nx-1)
@@ -40,7 +40,7 @@ pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
 b = np.zeros((ny,nx))
 
-
+#f, (ax1, ax2) = plt.subplots(ncols=2)
 plt.figure()
 for n in range(nt):
 	un[:] = u[:]
@@ -50,6 +50,7 @@ for n in range(nt):
 		((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx))**2-\
 		2*((u[1:-1,2:]-u[1:-1,0:-2])/(2*dy)*(v[2:,1:-1]-v[0:-2,1:-1])/(2*dx))-\
 		((v[1:-1,2:]-v[1:-1,0:-2])/(2*dy))**2)	
+
 	for q in range(nit):
 		pn[:] = p[:]
 		p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
@@ -60,7 +61,9 @@ for n in range(nt):
 		p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
 		p[:,0]=p[:,1]		##dp/dx = 0 at x = 0
 		p[:,-1]=0		##dp/dx = 0 at x = 2
+		
 
+	
 	u[1:-1,1:-1] = un[1:-1,1:-1]-\
 		un[1:-1,1:-1]*dt/dx*(un[1:-1,1:-1]-un[0:-2,1:-1])-\
 		vn[1:-1,1:-1]*dt/dy*(un[1:-1,1:-1]-un[1:-1,0:-2])-\
@@ -88,21 +91,26 @@ for n in range(nt):
 	if anicheck=='y' and n%5==0:
 		plt.clf()
 		plt.contourf(X,Y,p)
-		plt.quiver(X,Y,u,v, scale=3)
+		plt.quiver(X[::2,::2],Y[::2,::2],u[::2,::2],v[::2,::2])
 		plt.draw()
 	if anicheck=='n':
 		plt.close()
 
-plt.figure()
+prescon = plt.figure()
 plt.contourf(X,Y,p,alpha=0.5)
 plt.colorbar()
 plt.contour(X,Y,p)
-plt.quiver(X,Y,u,v)
+plt.quiver(X[::2,::2],Y[::2,::2],u[::2,::2],v[::2,::2])
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Pressure contour')
+prescon.savefig('cavity pressure contour.png')
 
-plt.figure()
-plt.streamplot(x,y,np.transpose(u),np.transpose(v))
+stream = plt.figure()
+plt.streamplot(x,y,np.transpose(u),np.transpose(v),density=[5, 2])
 plt.contourf(X,Y,p,alpha=0.5)
-
+plt.colorbar()
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Velocity field streamplot')
+stream.savefig('cavity streamplot.png')

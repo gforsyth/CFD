@@ -10,9 +10,10 @@ import time
 plt.ion()
 
 ##variable declarations
-nx = 21
-ny = 21
-nt = 10 
+nx = 41
+ny = 41
+nt = 500
+nit=50 
 c = 1
 dx = 2.0/(nx-1)
 dy = 2.0/(ny-1)
@@ -26,7 +27,6 @@ rho = 1
 nu = .1
 F = 1
 
-#dt = input('Enter dt: ') 
 dt = .01
 #initial conditions
 u = np.zeros((ny,nx)) ##create a XxY vector of 0's
@@ -44,7 +44,11 @@ b = np.zeros((ny,nx))
 #plt.quiver(X,Y,u,v)
 #plt.show()
 
-for n in range(nt):
+udiff = 1
+stepcount = 0
+
+#for n in range(nt):
+while udiff > .001:
 	un[:] = u[:]
 	vn[:] = v[:]
 	pn[:] = p[:]
@@ -53,31 +57,37 @@ for n in range(nt):
 		((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx))**2-\
 		2*((u[1:-1,2:]-u[1:-1,0:-2])/(2*dy)*(v[2:,1:-1]-v[0:-2,1:-1])/(2*dx))-\
 		((v[1:-1,2:]-v[1:-1,0:-2])/(2*dy))**2)	
-	p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
-		(2*(dx**2+dy**2)) -\
-		dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
-
+	
 	####Periodic BC Pressure @ x = 2
 	b[-1,1:-1]=rho*(1/dt*((u[0,1:-1]-u[-2,1:-1])/(2*dx)+(v[-1,2:]-v[-1,0:-2])/(2*dy))-\
 		((u[0,1:-1]-u[-2,1:-1])/(2*dx))**2-\
 		2*((u[-1,2:]-u[-1,0:-2])/(2*dy)*(v[0,1:-1]-v[-2,1:-1])/(2*dx))-\
 		((v[-1,2:]-v[-1,0:-2])/(2*dy))**2)	
-	p[-1,1:-1] = ((pn[0,1:-1]+pn[-2,1:-1])*dy**2+(pn[-1,2:]+pn[-1,0:-2])*dx**2)/\
-		(2*(dx**2+dy**2)) -\
-		dx**2*dy**2/(2*(dx**2+dy**2))*b[-1,1:-1]
 
 	####Periodic BC Pressure @ x = 0
 	b[0,1:-1]=rho*(1/dt*((u[1,1:-1]-u[-1,1:-1])/(2*dx)+(v[0,2:]-v[0,0:-2])/(2*dy))-\
 		((u[1,1:-1]-u[-1,1:-1])/(2*dx))**2-\
 		2*((u[0,2:]-u[0,0:-2])/(2*dy)*(v[1,1:-1]-v[-1,1:-1])/(2*dx))-\
 		((v[0,2:]-v[0,0:-2])/(2*dy))**2)	
-	p[0,1:-1] = ((pn[1,1:-1]+pn[-1,1:-1])*dy**2+(pn[0,2:]+pn[0,0:-2])*dx**2)/\
-		(2*(dx**2+dy**2)) -\
-		dx**2*dy**2/(2*(dx**2+dy**2))*b[0,1:-1]
 	
-	####Wall boundary conditions, pressure
-	p[-1,:] =p[-2,:]	##dp/dy = 0 at y = 2
-	p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
+	for q in range(nit):	
+		p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
+			(2*(dx**2+dy**2)) -\
+			dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
+
+		####Periodic BC Pressure @ x = 2
+		p[-1,1:-1] = ((pn[0,1:-1]+pn[-2,1:-1])*dy**2+(pn[-1,2:]+pn[-1,0:-2])*dx**2)/\
+			(2*(dx**2+dy**2)) -\
+			dx**2*dy**2/(2*(dx**2+dy**2))*b[-1,1:-1]
+
+		####Periodic BC Pressure @ x = 0
+		p[0,1:-1] = ((pn[1,1:-1]+pn[-1,1:-1])*dy**2+(pn[0,2:]+pn[0,0:-2])*dx**2)/\
+			(2*(dx**2+dy**2)) -\
+			dx**2*dy**2/(2*(dx**2+dy**2))*b[0,1:-1]
+		
+		####Wall boundary conditions, pressure
+		p[-1,:] =p[-2,:]	##dp/dy = 0 at y = 2
+		p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
 	
 	
 
@@ -132,9 +142,9 @@ for n in range(nt):
 	u[:,-1] = 0
 	v[:,0] = 0
 	v[:,-1]=0
-
-plt.quiver(X,Y,u,v,scale=2.5)
+	
+	udiff = (u[nx/2,nx/2]-un[nx/2,nx/2])/u[nx/2,nx/2]
+	stepcount += 1
+#plt.quiver(X,Y,u,v)
+plt.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
 plt.show()
-for i in range(nx):
-	plt.plot(x[i]+u[i,:],y)
-plt.xlim(0,2)

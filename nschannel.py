@@ -12,7 +12,7 @@ plt.ion()
 ##variable declarations
 nx = 41
 ny = 41
-nt = 500
+nt = 10
 nit=50 
 c = 1
 dx = 2.0/(nx-1)
@@ -26,8 +26,8 @@ Y,X = np.meshgrid(y,x)
 rho = 1
 nu = .1
 F = 1
-
 dt = .01
+
 #initial conditions
 u = np.zeros((ny,nx)) ##create a XxY vector of 0's
 un = np.zeros((ny,nx)) ##create a XxY vector of 0's
@@ -35,23 +35,17 @@ un = np.zeros((ny,nx)) ##create a XxY vector of 0's
 v = np.zeros((ny,nx)) ##create a XxY vector of 0's
 vn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
-p = np.zeros((ny,nx)) ##create a XxY vector of 0's
-pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
+p = np.ones((ny,nx)) ##create a XxY vector of 0's
+pn = np.ones((ny,nx)) ##create a XxY vector of 0's
 
 b = np.zeros((ny,nx))
-
-
-#plt.quiver(X,Y,u,v)
-#plt.show()
 
 udiff = 1
 stepcount = 0
 
-#for n in range(nt):
 while udiff > .001:
 	un[:] = u[:]
 	vn[:] = v[:]
-	pn[:] = p[:]
 	
 	b[1:-1,1:-1]=rho*(1/dt*((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx)+(v[1:-1,2:]-v[1:-1,0:-2])/(2*dy))-\
 		((u[2:,1:-1]-u[0:-2,1:-1])/(2*dx))**2-\
@@ -69,8 +63,8 @@ while udiff > .001:
 		((u[1,1:-1]-u[-1,1:-1])/(2*dx))**2-\
 		2*((u[0,2:]-u[0,0:-2])/(2*dy)*(v[1,1:-1]-v[-1,1:-1])/(2*dx))-\
 		((v[0,2:]-v[0,0:-2])/(2*dy))**2)	
-	
 	for q in range(nit):	
+		pn[:]=p[:]
 		p[1:-1,1:-1] = ((pn[2:,1:-1]+pn[0:-2,1:-1])*dy**2+(pn[1:-1,2:]+pn[1:-1,0:-2])*dx**2)/\
 			(2*(dx**2+dy**2)) -\
 			dx**2*dy**2/(2*(dx**2+dy**2))*b[1:-1,1:-1]
@@ -88,9 +82,7 @@ while udiff > .001:
 		####Wall boundary conditions, pressure
 		p[-1,:] =p[-2,:]	##dp/dy = 0 at y = 2
 		p[0,:] = p[1,:]		##dp/dy = 0 at y = 0
-	
-	
-
+		
 	u[1:-1,1:-1] = un[1:-1,1:-1]-\
 		un[1:-1,1:-1]*dt/dx*(un[1:-1,1:-1]-un[0:-2,1:-1])-\
 		vn[1:-1,1:-1]*dt/dy*(un[1:-1,1:-1]-un[1:-1,0:-2])-\
@@ -143,8 +135,9 @@ while udiff > .001:
 	v[:,0] = 0
 	v[:,-1]=0
 	
-	udiff = (u[nx/2,nx/2]-un[nx/2,nx/2])/u[nx/2,nx/2]
+	#udiff = (u[nx/2,nx/2]-un[nx/2,nx/2])/u[nx/2,nx/2]
+	udiff = (np.sum(u)-np.sum(un))/np.sum(u)
 	stepcount += 1
-#plt.quiver(X,Y,u,v)
+
 plt.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
 plt.show()

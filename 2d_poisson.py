@@ -54,15 +54,10 @@ for n in range(nt):
 	p[:,-1] = 0		##p = 0 @ x = 2
 	p[0,:] = 0		##p = 0 @ y = 0
 	p[-1,:] = 0		##p = 0 @ y = 1
-	#if n%20 == 0:
-	#surf.remove()
-	#surf = ax.plot_surface(X,Y,p[:], rstride=1, cstride=1, cmap=cm.coolwarm,
-	#	linewidth=0, antialiased=False)
-	#surf = ax.plot_wireframe(X,Y,p[:])
 
 surf = ax.plot_surface(X,Y,p[:], rstride=1, cstride=1, cmap='PuOr',
         linewidth=0, antialiased=False)
-surf = ax.plot_wireframe(X,Y,p[:])
+#surf = ax.plot_wireframe(X,Y,p[:])
 ax.set_xlim(0,2)
 ax.set_ylim(0,1)
 ax.set_xlabel('X')

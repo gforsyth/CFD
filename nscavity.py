@@ -25,9 +25,9 @@ Y,X = np.meshgrid(y,x)
 
 ##physical variables
 rho = 1
-nu = .5
-
-dt = input('Enter dt: ') 
+nu = .1
+dt = .001
+#dt = input('Enter dt: ') 
 
 u = np.zeros((ny,nx)) ##create a XxY vector of 0's
 un = np.zeros((ny,nx)) ##create a XxY vector of 0's
@@ -40,7 +40,6 @@ pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
 
 b = np.zeros((ny,nx))
 
-#f, (ax1, ax2) = plt.subplots(ncols=2)
 plt.figure()
 for n in range(nt):
 	un[:] = u[:]
@@ -91,27 +90,24 @@ for n in range(nt):
 	if anicheck=='y' and n%5==0:
 		plt.clf()
 		plt.contourf(X,Y,p)
-		#plt.quiver(X[::2,::2],Y[::2,::2],u[::2,::2],v[::2,::2])
 		plt.quiver(X,Y,u,v)
 		plt.draw()
 	if anicheck=='n':
 		plt.close()
 
-#prescon = plt.figure()
-#plt.contourf(X,Y,p,alpha=0.5)
-#plt.colorbar()
-#plt.contour(X,Y,p)
-#plt.quiver(X[::2,::2],Y[::2,::2],u[::2,::2],v[::2,::2])
-#plt.xlabel('X')
-#plt.ylabel('Y')
-#plt.title('Pressure contour')
-#prescon.savefig('cavity pressure contour.png')
-#
-#stream = plt.figure()
-#plt.streamplot(x,y,np.transpose(u),np.transpose(v),density=[5, 2])
-#plt.contourf(X,Y,p,alpha=0.5)
-#plt.colorbar()
-#plt.xlabel('X')
-#plt.ylabel('Y')
-#plt.title('Velocity field streamplot')
-#stream.savefig('cavity streamplot.png')
+prescon = plt.figure()
+plt.contourf(X,Y,p,alpha=0.5)
+plt.colorbar()
+plt.contour(X,Y,p)
+plt.quiver(X[::2,::2],Y[::2,::2],u[::2,::2],v[::2,::2])
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Pressure contour')
+
+stream = plt.figure()
+plt.streamplot(x,y,np.transpose(u),np.transpose(v),density=[5, 2])
+plt.contourf(X,Y,p,alpha=0.5)
+plt.colorbar()
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Velocity field streamplot')

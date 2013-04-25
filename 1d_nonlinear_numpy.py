@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy
 import time
+import pickle
 from numbapro import autojit, cuda, jit, float32
 
 
@@ -45,7 +46,7 @@ def NonLinCudaJit(u, dx, dt, un):
 
 def main():
     ##System Conditions    
-    nx = 2457600
+    nx = 8192000*4
     nt = 300
     c = 1
     xmax = 15.0
@@ -59,19 +60,23 @@ def main():
     un = numpy.ones(nx)    
 
     t1 = time.time()
-    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
+    #u = NonLinNumpy(ui, un, nx, nt, dx, dt)
     t2 = time.time()
     print "Numpy version took: %.6f seconds" % (t2-t1)
-    plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+    numpytime = t2-t1
+    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
    
     t1 = time.time()
     u = NonLinNumba(ui, un, nx, nt, dx, dt)
     t2 = time.time()
     print "Numbapro Vectorize version took: %.6f seconds" % (t2-t1)
-    plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+    vectime = t2-t1
+    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
-    griddim = 10, 10
-    blockdim = 768,32,1 
+    #griddim = 10, 10      ##these work for nx = 2457600 
+    #blockdim = 768,32,1 
+    griddim = 320, 1
+    blockdim = 768/32, 32, 1
     NonLinCudaJit_conf = NonLinCudaJit[griddim, blockdim]
     t1 = time.time()
     for t in range(nt):
@@ -79,8 +84,15 @@ def main():
     t2 = time.time()
 
     print "Numbapro Cuda version took: %.6f seconds" % (t2-t1)
-    plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+    cudatime = t2-t1
+    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
+    f = open('times', 'a')
+    f.write(str(nx) + '\n')
+    f.write(str(numpytime) + '\n')
+    f.write(str(vectime) + '\n')
+    f.write(str(cudatime) + '\n')
+    f.close()
 
 #    t1 = time.time()
 #    u = NonLinVanilla(ui, nx, nt, dx, dt)
@@ -88,7 +100,7 @@ def main():
 #    print "Vanilla version took: %.6f seconds" % (t2-t1)
 #    
 #    plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
-    plt.show()
+    #plt.show()
 
 
 if __name__ == "__main__":

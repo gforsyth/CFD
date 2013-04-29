@@ -3,16 +3,20 @@ from numbapro import autojit, cuda, jit, float32
 
 
 
-@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32[:,:]], target='gpu')
-def CudaU(U, V, P, dx, dy, dt, rho, UN):
-    tid = cuda.threadIdx.x
-    blkid = cuda.blockIdx.x
-    blkdim = cuda.blockDim.x
-    ntid = tid + blkid * blkdim
+@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32, float32[:,:]], target='gpu')
+def CudaU(U, V, P, dx, dy, dt, rho, nu, UN):
+    tidx = cuda.threadIdx.x
+    blkidx = cuda.blockIdx.x
+    blkdimx = cuda.blockDim.x
+
+    tidy = cuda.threadIdx.y
+    blkidy = cuda.blockIdx.y
+    blkdimy = cuda.blockDim.y
+
     height, width = U.shape
 
-    i = ntid % width
-    j = ntid / width
+    i = tidx + blkidx * blkdimx
+    j = tidy + blkidy * blkdimy
 
 
     UN[i,j]=U[i,j]-U[i,j]*dt/dx*(U[i,j]-U[i-1,j])-\
@@ -31,17 +35,20 @@ def CudaU(U, V, P, dx, dy, dt, rho, UN):
         UN[i, j] = 1
 
 
-@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32[:,:]], target='gpu')
-def CudaV(U, V, P, dx, dy, dt, rho, VN):
-    tid = cuda.threadIdx.x
-    blkid = cuda.blockIdx.x
-    blkdim = cuda.blockDim.x
-    ntid = tid + blkid * blkdim
+@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32, float32[:,:]], target='gpu')
+def CudaV(U, V, P, dx, dy, dt, rho, nu, VN):
+    tidx = cuda.threadIdx.x
+    blkidx = cuda.blockIdx.x
+    blkdimx = cuda.blockDim.x
+
+    tidy = cuda.threadIdx.y
+    blkidy = cuda.blockIdx.y
+    blkdimy = cuda.blockDim.y
 
     height, width = U.shape
 
-    i = ntid % width
-    j = ntid / width
+    i = tidx + blkidx * blkdimx
+    j = tidy + blkidy * blkdimy
 
     VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
         V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
@@ -60,10 +67,10 @@ def CudaV(U, V, P, dx, dy, dt, rho, VN):
 
 @autojit
 def ppe(rho, dt, dx, dy, U, V, P):
-	height, width = U.shape
-    B = np.zeros((height, width))
-    PN = np.zeros((height, width))
-
+    height, width = U.shape
+    B = numpy.zeros((height, width))
+    PN = numpy.zeros((height, width))
+    nit = 50
     for i in range(1,width):
         for j in range(1, height):
             B[i,j] = 1/dt*((U[i+1,j]-U[i-1,j])/(2*dx)+(V[i,j+1]-V[i,j-1])/(2*dy))\
@@ -85,47 +92,43 @@ def ppe(rho, dt, dx, dy, U, V, P):
             PN[width-1,j] = PN[width-2, j]
 
         P[:] = PN[:]
-
+    return P
 
 def main():
 
 
-nx = 41
-ny = 41
-dx = 2.0/(nx-1)
-dy = 2.0/(ny-1)
-dt = .001
-nit = 50
+    nx = 41
+    ny = 41
+    dx = 2.0/(nx-1)
+    dy = 2.0/(ny-1)
+    dt = .001
 
-rho = 1
-nu =.1 
+    rho = 1
+    nu =.1 
 
-nt = 300
+    nt = 300
 
-U = np.zeros((ny,nx), dtype=numpy.float32)
-V = np.zeros((ny,nx), dtype=numpy.float32)
-P = np.zeros((ny, nx), dtype=numpy.float32)
+    U = numpy.zeros((ny,nx), dtype=numpy.float32)
+    V = numpy.zeros((ny,nx), dtype=numpy.float32)
+    P = numpy.zeros((ny, nx), dtype=numpy.float32)
 
-UN = np.empty_like(U)
-VN = np.empty_like(V)
+    UN = numpy.empty_like(U)
+    VN = numpy.empty_like(V)
 
-griddim = 1, 1
-blockdim = nx, ny, 1
+    griddim = 1, 1
+    blockdim = nx, ny, 1
 
-CudaV_conf = CudaV[griddim, blockdim]
-CudaU_conf = CudaU[griddim, blockdim]
-
-def CudaV(U, V, P, dx, dy, dt, rho, VN):
-
-for n in range(nt):
-    P = ppe(rho, dt, dx, dy, U, V, P)
-    CudaU_conf(U, V, P, dx, dy, dt, rho, UN)
-    CudaV_conf(U, V, P, dx, dy, dt, rho, VN)
-
-    U[:] = UN[:]
-    V[:] = VN[:]
+    CudaV_conf = CudaV[griddim, blockdim]
+    CudaU_conf = CudaU[griddim, blockdim]
 
 
+    for n in range(nt):
+        P = ppe(rho, dt, dx, dy, U, V, P)
+        CudaU_conf(U, V, P, dx, dy, dt, rho, nu, UN)
+        CudaV_conf(U, V, P, dx, dy, dt, rho, nu, VN)
+
+        U[:] = UN[:]
+        V[:] = VN[:]
 
 
 

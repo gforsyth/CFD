@@ -46,7 +46,7 @@ def NonLinCudaJit(u, dx, dt, un):
 
 def main():
     ##System Conditions    
-    nx = 8192000*4
+    nx = 8192
     nt = 300
     c = 1
     xmax = 15.0

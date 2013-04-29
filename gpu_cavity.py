@@ -21,7 +21,6 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
     if i >= U.shape[0] or j >= U.shape[1]:
         return                              ###if you try to index out of the array bounds, kill the thread
 
-
     UN[i,j]=U[i,j]-U[i,j]*dt/dx*(U[i,j]-U[i-1,j])-\
         V[i,j]*dt/dy*(U[i,j]-U[i,j-1])-\
             dt/(2*rho*dx)*(P[i+1,j]-P[i-1,j])+\
@@ -30,12 +29,12 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
 
     if i == 0:
         UN[i, j] = 0
-    elif i == width-1:
-        UN[i, j] = 0
+    elif i == height-1:
+        UN[i, j] = 1
     elif j == 0:
         UN[i, j] = 0
-    elif j == height-1:
-        UN[i, j] = 1
+    elif j == width-1:
+        UN[i, j] = 0
 
     VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
         V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
@@ -45,11 +44,11 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
 
     if i == 0:
         VN[i, j] = 0
-    elif i == width-1:
+    elif i == height-1:
         VN[i, j] = 0
     elif j == 0:
         VN[i, j] = 0
-    elif j == height-1:
+    elif j == width-1:
         VN[i, j] = 0
 
     U[i,j] = UN[i,j]
@@ -94,16 +93,19 @@ def ppe(rho, dt, dx, dy, U, V, P):
     nit = 50
     for i in range(1,width):
         for j in range(1, height):
-            B[i,j] = 1/dt*((U[i+1,j]-U[i-1,j])/(2*dx)+(V[i,j+1]-V[i,j-1])/(2*dy))\
-                    -((U[i+1,j]-U[i-1,j])/(2*dx))**2\
-                    -2*(U[i,j+1]-U[i,j-1])/(2*dy)*(V[i+1,j]-V[i-1,j])/(2*dx)\
-                    -((V[i,j+1]-V[i,j-1])/(2*dy))**2
+            B[i,j] = 1/dt*((U[i+1,j]-U[i-1,j])/(2*dx)+\
+                (V[i,j+1]-V[i,j-1])/(2*dy))-\
+                    ((U[i+1,j]-U[i-1,j])/(2*dx))**2-\
+                2*(U[i,j+1]-U[i,j-1])/(2*dy)*\
+                    (V[i+1,j]-V[i-1,j])/(2*dx)-\
+                    ((V[i,j+1]-V[i,j-1])/(2*dy))**2
 
     for n in range(nit):
-        for i in range(1,width):
-            for j in range(1, height):
-                PN[i,j] = ((P[i+1,j]+P[i-1,j])*dy**2+(P[i,j+1] + P[i,j-1])*dx**2)/(2*(dx**2+dy**2))\
-                        +rho*dx**2*dy**2/((2*(dx**2+dy**2)))*B[i,j]
+        for i in range(1,width-1):
+            for j in range(1, height-1):
+                PN[i,j] = ((P[i+1,j]+P[i-1,j])*dy**2+\
+                    (P[i,j+1] + P[i,j-1])*dx**2)/(2*(dx**2+dy**2))\
+                        -rho*dx**2*dy**2/(2*(dx**2+dy**2))*B[i,j]
 
         for i in range(width):    
             PN[i, 0] = PN[i, 1]
@@ -111,25 +113,26 @@ def ppe(rho, dt, dx, dy, U, V, P):
         for j in range(height):
             PN[0, j] = PN[1, j]
             PN[width-1,j] = PN[width-2, j]
-
+    
         P[:] = PN[:]
     return P
 
 def main():
 
 
-    nx = 41
-    ny = 41
+    nx = 11
+    ny = 11
     dx = 2.0/(nx-1)
     dy = 2.0/(ny-1)
     dt = .001
 
-    rho = 1
+    rho = 1.0
     nu =.1 
 
-    nt = 300
+    nt = 100
 
     U = numpy.zeros((ny,nx), dtype=numpy.float32)
+    U[-1,:] = 1
     V = numpy.zeros((ny,nx), dtype=numpy.float32)
     P = numpy.zeros((ny, nx), dtype=numpy.float32)
 
@@ -140,8 +143,8 @@ def main():
     P = ppe(rho, dt, dx, dy, U, V, P)
 
 
-    griddim = 1, 1
-    blockdim = 64, 64, 1
+    griddim = 10, 1
+    blockdim = 32, 32, 1
     
     stream = cuda.stream()
     d_U = cuda.to_device(U, stream)
@@ -161,7 +164,9 @@ def main():
         d_V.to_host(stream)
         stream.synchronize()
         P = ppe(rho, dt, dx, dy, U, V, P)
-
+        print P
+        #print U
+        #print V
 
 if __name__ == "__main__":
         main()

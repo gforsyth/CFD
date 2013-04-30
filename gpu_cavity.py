@@ -97,8 +97,8 @@ def ppe(rho, dt, dx, dy, U, V, P):
     B = numpy.zeros((height, width))
     PN = numpy.zeros((height, width))
     nit = 50
-    for i in range(1,width):
-        for j in range(1, height):
+    for i in range(1,width-1):
+        for j in range(1, height-1):
             B[i,j] = 1/dt*((U[i+1,j]-U[i-1,j])/(2*dx)+\
                 (V[i,j+1]-V[i,j-1])/(2*dy))-\
                     ((U[i+1,j]-U[i-1,j])/(2*dx))**2-\
@@ -164,11 +164,12 @@ def main():
 
 
     for n in range(nt):
+        P = ppe(rho, dt, dx, dy, U, V, P)
         CudaU[griddim, blockdim, stream](d_U, d_V, P, dx, dy, dt, rho, nu, d_UN, d_VN)
         d_U.to_host(stream)
         d_V.to_host(stream)
         stream.synchronize()
-        P = ppe(rho, dt, dx, dy, U, V, P)
+        #P = ppe(rho, dt, dx, dy, U, V, P)
 
     t2 = time.time()
 

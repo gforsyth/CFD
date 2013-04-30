@@ -1,6 +1,12 @@
 import numpy
 from numbapro import autojit, cuda, jit, float32
-
+import matplotlib
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
+import math
+import time
 
 
 @jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32, float32[:,:], float32[:,:]], target='gpu')
@@ -13,7 +19,7 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
     blkidy = cuda.blockIdx.y
     blkdimy = cuda.blockDim.y
 
-    height, width = U.shape
+    m, n = U.shape
 
     i = tidx + blkidx * blkdimx
     j = tidy + blkidy * blkdimy
@@ -29,12 +35,12 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
 
     if i == 0:
         UN[i, j] = 0
-    elif i == height-1:
-        UN[i, j] = 1
+    elif i == m-1:
+        UN[i, j] = 0
     elif j == 0:
         UN[i, j] = 0
-    elif j == width-1:
-        UN[i, j] = 0
+    elif j == n-1:
+        UN[i, j] = 1
 
     VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
         V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
@@ -44,11 +50,11 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, UN, VN):
 
     if i == 0:
         VN[i, j] = 0
-    elif i == height-1:
+    elif i == m-1:
         VN[i, j] = 0
     elif j == 0:
         VN[i, j] = 0
-    elif j == width-1:
+    elif j == n-1:
         VN[i, j] = 0
 
     U[i,j] = UN[i,j]
@@ -107,55 +113,54 @@ def ppe(rho, dt, dx, dy, U, V, P):
                     (P[i,j+1] + P[i,j-1])*dx**2)/(2*(dx**2+dy**2))\
                         -rho*dx**2*dy**2/(2*(dx**2+dy**2))*B[i,j]
 
-        for i in range(width):    
+        for i in range(height):    
             PN[i, 0] = PN[i, 1]
-            PN[i, height-1] = PN[i, height-2]
-        for j in range(height):
+            PN[i, width-1] = 0 
+        for j in range(width):
             PN[0, j] = PN[1, j]
-            PN[width-1,j] = PN[width-2, j]
+            PN[height-1,j] = PN[height-2, j]
     
         P[:] = PN[:]
     return P
 
 def main():
 
-
-    nx = 11
-    ny = 11
+    flowtime = 0.2
+    nx = 128
+    ny = 128
     dx = 2.0/(nx-1)
     dy = 2.0/(ny-1)
-    dt = .001
+
+    dt = dx/50
 
     rho = 1.0
     nu =.1 
 
-    nt = 100
+    nt = int(flowtime/dt)
 
-    U = numpy.zeros((ny,nx), dtype=numpy.float32)
+    U = numpy.zeros((nx,ny), dtype=numpy.float32)
     U[-1,:] = 1
-    V = numpy.zeros((ny,nx), dtype=numpy.float32)
+    V = numpy.zeros((nx,ny), dtype=numpy.float32)
     P = numpy.zeros((ny, nx), dtype=numpy.float32)
 
-    UN = numpy.zeros((ny,nx), dtype=numpy.float32)
-    VN = numpy.zeros((ny,nx), dtype=numpy.float32)
+    UN = numpy.zeros((nx,ny), dtype=numpy.float32)
+    VN = numpy.zeros((nx,ny), dtype=numpy.float32)
 
     
     P = ppe(rho, dt, dx, dy, U, V, P)
 
 
-    griddim = 10, 1
-    blockdim = 32, 32, 1
-    
+    griddim = nx, ny
+    blockdim = 768, 1, 1
+    if nx > 767:
+        griddim = int(math.ceil(float(nx)/blockdim[0])), int(math.ceil(float(ny)/blockdim[0]))
+
+    t1 = time.time()    
     stream = cuda.stream()
     d_U = cuda.to_device(U, stream)
     d_V = cuda.to_device(V, stream)
     d_UN = cuda.to_device(UN, stream)
     d_VN = cuda.to_device(VN, stream)
-   # d_P = cuda.to_device(P, stream)
-
-
-#    CudaV_conf = CudaV[griddim, blockdim]
-#    CudaU_conf = CudaU[griddim, blockdim]
 
 
     for n in range(nt):
@@ -164,9 +169,36 @@ def main():
         d_V.to_host(stream)
         stream.synchronize()
         P = ppe(rho, dt, dx, dy, U, V, P)
-        print P
-        #print U
-        #print V
+
+    t2 = time.time()
+
+    print "Completed grid of %d by %d in %.6f seconds" % (nx, ny, t2-t1)
+    x = numpy.linspace(0,2,nx)
+    y = numpy.linspace(0,2,ny)
+    Y,X = numpy.meshgrid(y,x)
+
+    #import pdb
+    #pdb.set_trace()
+    
+    prescon = plt.figure()
+    #plt.contourf(X[::10,::10],Y[::10,::10],P[::10,::10],alpha=0.5)
+    #plt.colorbar()
+    #plt.contour(X[::10,::10],Y[::10,::10],P[::10,::10])
+    #plt.quiver(X[::10,::10],Y[::10,::10],U[::10,::10],V[::10,::10])
+    #plt.xlabel('X')
+    #plt.ylabel('Y')
+    #plt.title('Pressure contour')
+    plt.contourf(X,Y,P,alpha=.5)
+    plt.colorbar()
+    plt.contour(X,Y,P,)
+    plt.quiver(X[::2,::2],Y[::2,::2],U[::2,::2],V[::2,::2])
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Pressure contour')
+    
+    plt.show()
+
+
 
 if __name__ == "__main__":
         main()

@@ -125,14 +125,14 @@ def ppe(rho, dt, dx, dy, U, V, P):
 
 def main():
 
-    flowtime = 0.2
-    nx = 128
-    ny = 128
+    flowtime = 1.0
+    nx = 257
+    ny = 257
     dx = 2.0/(nx-1)
     dy = 2.0/(ny-1)
 
     dt = dx/50
-
+    
     rho = 1.0
     nu =.1 
 
@@ -199,7 +199,9 @@ def main():
     
     plt.show()
 
+    from ghiacompy import plotghiacomp
 
+    plotghiacomp(U[(nx-1)/2,:],numpy.linspace(0,1,ny))
 
 if __name__ == "__main__":
         main()

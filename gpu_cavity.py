@@ -48,9 +48,6 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, nt):
         elif j == n-1:
             UN[i, j] = 1
 
-        cuda.syncthreads()
-
-
         VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
             V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
                 dt/(2*rho*dx)*(P[i,j+1]-P[i,j-1])+\

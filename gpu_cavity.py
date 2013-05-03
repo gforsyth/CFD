@@ -94,11 +94,11 @@ def ppe(rho, dt, dx, dy, U, V, P):
         P[:] = PN[:]
     return P
 
-def main():
+def main(nx):
 
     flowtime = 0.1
-    nx = 256 
-    ny = 256
+    #nx = 256 
+    ny = nx
     dx = 2.0/(nx-1)
     dy = 2.0/(ny-1)
 
@@ -117,7 +117,7 @@ def main():
     VN = numpy.zeros((nx,ny), dtype=numpy.float32)
 
     griddim = nx, ny
-    blockdim = 768, 1, 1
+    blockdim = 768, 768, 1
     if nx > 767:
         griddim = int(math.ceil(float(nx)/blockdim[0])), int(math.ceil(float(ny)/blockdim[0]))
 
@@ -166,9 +166,9 @@ def main():
     f.write(str(nt) + '\n')
     f.close()
 
-    from ghiacompy import plotghiacomp
+   # from ghiacompy import plotghiacomp
 
-    plotghiacomp(U[(nx-1)/2,:],numpy.linspace(0,1,ny))
+   # plotghiacomp(U[(nx-1)/2,:],numpy.linspace(0,1,ny))
 
 if __name__ == "__main__":
         main()

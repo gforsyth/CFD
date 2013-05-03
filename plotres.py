@@ -33,7 +33,23 @@ for i in range(x):
     acud[i] = float(cud[i])
     aiter[i] = float(iter[i])
    
-plt.plot(aiter[:], anum[:])
-plt.plot(aiter[:], avec[:])
-plt.plot(aiter[:], acud[:])
-plt.show()
+plt.plot(aiter[:], anum[:], '-o')
+plt.plot(aiter[:], avec[:], '-o')
+plt.plot(aiter[:], acud[:], '-o')
+plt.legend(['Numpy', 'NumbaPro', 'NumbaPro with CUDA'], loc=2)
+plt.title('Grid Size vs. Compute Time')
+plt.xlabel('Number of elements')
+plt.ylabel('Compute time in seconds')
+
+plt.savefig('1dgridvtime.png')
+
+plt.figure()
+plt.plot(aiter[:5], anum[:5], '-o')
+plt.plot(aiter[:5], avec[:5], '-o')
+plt.plot(aiter[:5], acud[:5], '-o')
+plt.legend(['Numpy', 'NumbaPro', 'NumbaPro with CUDA'], loc=2)
+plt.title('Grid Size vs. Compute Time')
+plt.xlabel('Number of elements')
+plt.ylabel('Compute time in seconds')
+plt.savefig('1dgridvtime_closeup.png')
+

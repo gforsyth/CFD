@@ -154,15 +154,15 @@ def main():
     #plt.xlabel('X')
     #plt.ylabel('Y')
     #plt.title('Pressure contour')
-    plt.contourf(X,Y,P,alpha=.5)
-    plt.colorbar()
-    plt.contour(X,Y,P,)
-    plt.quiver(X[::2,::2],Y[::2,::2],U[::2,::2],V[::2,::2])
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title('Pressure contour')
+    #plt.contourf(X,Y,P,alpha=.5)
+    #plt.colorbar()
+    #plt.contour(X,Y,P,)
+    #plt.quiver(X[::2,::2],Y[::2,::2],U[::2,::2],V[::2,::2])
+    #plt.xlabel('X')
+    #plt.ylabel('Y')
+    #plt.title('Pressure contour')
     
-    plt.show()
+    #plt.show()
 
     from ghiacompy import plotghiacomp
 

@@ -70,12 +70,12 @@ def main(nx):
 #    numpytime = t2-t1
 #    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 #   
-#    t1 = time.time()
-#    u = NonLinNumba(ui, un, nx, nt, dx, dt)
-#    t2 = time.time()
-#    print "Numbapro Vectorize version took: %.6f seconds" % (t2-t1)
-#    vectime = t2-t1
-#    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+    t1 = time.time()
+    u = NonLinNumba(ui, un, nx, nt, dx, dt)
+    t2 = time.time()
+    print "Numbapro Vectorize version took: %.6f seconds" % (t2-t1)
+    vectime = t2-t1
+    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
     #griddim = 10, 10      ##these work for nx = 2457600 
     #blockdim = 768,32,1

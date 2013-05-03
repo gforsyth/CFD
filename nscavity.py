@@ -10,8 +10,8 @@ import time
 
 ##variable declarations
 flowtime = 1.0
-nx = 41
-ny = 41
+nx = 256
+ny = 256
 
 
 
@@ -90,6 +90,9 @@ for n in range(nt):
 	u[-1,:] = 0		## at y = 2 where u = 1
 
 t2 = time.time()
+
+print t2-t1
+
 
 f = open('numpycavitytimes','a')
 f.write(str(nx) + '\n')

@@ -41,6 +41,10 @@ def NonLinCudaJit(u, dx, dt, un):
     blkid = cuda.blockIdx.x
     blkdim = cuda.blockDim.x
     i = tid + blkid * blkdim
+
+    if i >= u.shape[0]:
+        return
+
     un[i] = -u[i]*dt/dx*(u[i]-u[i-1])+u[i]
 
 
@@ -59,24 +63,26 @@ def main(nx):
     ui[.5/dx:1/dx+1]=2 ##set hat function I.C. : .5<=x<=1 is 2
     un = numpy.ones(nx)    
 
-    t1 = time.time()
-    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
-    t2 = time.time()
-    print "Numpy version took: %.6f seconds" % (t2-t1)
-    numpytime = t2-t1
-    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
-   
-    t1 = time.time()
-    u = NonLinNumba(ui, un, nx, nt, dx, dt)
-    t2 = time.time()
-    print "Numbapro Vectorize version took: %.6f seconds" % (t2-t1)
-    vectime = t2-t1
-    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+#    t1 = time.time()
+#    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
+#    t2 = time.time()
+#    print "Numpy version took: %.6f seconds" % (t2-t1)
+#    numpytime = t2-t1
+#    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+#   
+#    t1 = time.time()
+#    u = NonLinNumba(ui, un, nx, nt, dx, dt)
+#    t2 = time.time()
+#    print "Numbapro Vectorize version took: %.6f seconds" % (t2-t1)
+#    vectime = t2-t1
+#    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
     #griddim = 10, 10      ##these work for nx = 2457600 
-    #blockdim = 768,32,1 
+    #blockdim = 768,32,1
+    u = numpy.ones(nx)
+    u[:] = ui[:]
     griddim = 320, 1
-    blockdim = 768/32, 32, 1
+    blockdim = 768, 1, 1
     NonLinCudaJit_conf = NonLinCudaJit[griddim, blockdim]
     t1 = time.time()
     for t in range(nt):
@@ -89,8 +95,8 @@ def main(nx):
 
     f = open('times', 'a')
     f.write(str(nx) + '\n')
-    f.write(str(numpytime) + '\n')
-    f.write(str(vectime) + '\n')
+   # f.write(str(numpytime) + '\n')
+   # f.write(str(vectime) + '\n')
     f.write(str(cudatime) + '\n')
     f.close()
 

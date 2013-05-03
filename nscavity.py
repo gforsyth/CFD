@@ -9,8 +9,8 @@ import time
 
 
 ##variable declarations
-flowtime = 1.0
-nx = 256
+flowtime = 0.1
+nx = 256 
 ny = 256
 
 
@@ -25,7 +25,6 @@ Y,X = np.meshgrid(y,x)
 
 dt = dx/50
 nt = int(flowtime/dt)
-
 
 ##physical variables
 rho = 1

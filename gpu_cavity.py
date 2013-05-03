@@ -9,8 +9,8 @@ import math
 import time
 
 
-@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32, float32], target='gpu')
-def CudaU(U, V, P, dx, dy, dt, rho, nu, nt):
+@jit(argtypes=[float32[:,:], float32[:,:], float32[:,:], float32[:,:], float32[:,:], float32, float32, float32, float32, float32], target='gpu')
+def CudaU(U, V, P, UN, VN, dx, dy, dt, rho, nu):
     tidx = cuda.threadIdx.x
     blkidx = cuda.blockIdx.x
     blkdimx = cuda.blockDim.x
@@ -20,9 +20,6 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, nt):
     blkdimy = cuda.blockDim.y
 
     m, n = U.shape
-
-    UN = cuda.shared.array(shape=(m, n), dtype=float32)
-    VN = cuda.shared.array(shape=(m, n), dtype=float32)
     
     i = tidx + blkidx * blkdimx
     j = tidy + blkidy * blkdimy
@@ -30,45 +27,39 @@ def CudaU(U, V, P, dx, dy, dt, rho, nu, nt):
     if i >= U.shape[0] or j >= U.shape[1]:
         return                              ###if you try to index out of the array bounds, kill the thread
 
-    for n in range(nt):
-        P = ppe(rho, dt, dx, dy, U, V, P)
+    UN[i,j]=U[i,j]-U[i,j]*dt/dx*(U[i,j]-U[i-1,j])-\
+        V[i,j]*dt/dy*(U[i,j]-U[i,j-1])-\
+            dt/(2*rho*dx)*(P[i+1,j]-P[i-1,j])+\
+        nu*(dt/dx**2*(U[i+1,j]-2*U[i,j]+U[i-1,j])+\
+            dt/dy**2*(U[i,j+1]-2*U[i,j]+U[i,j-1]))
 
-        UN[i,j]=U[i,j]-U[i,j]*dt/dx*(U[i,j]-U[i-1,j])-\
-            V[i,j]*dt/dy*(U[i,j]-U[i,j-1])-\
-                dt/(2*rho*dx)*(P[i+1,j]-P[i-1,j])+\
-            nu*(dt/dx**2*(U[i+1,j]-2*U[i,j]+U[i-1,j])+\
-                dt/dy**2*(U[i,j+1]-2*U[i,j]+U[i,j-1]))
+    if i == 0:
+        UN[i, j] = 0
+    elif i == m-1:
+        UN[i, j] = 0
+    elif j == 0:
+        UN[i, j] = 0
+    elif j == n-1:
+        UN[i, j] = 1
 
-        if i == 0:
-            UN[i, j] = 0
-        elif i == m-1:
-            UN[i, j] = 0
-        elif j == 0:
-            UN[i, j] = 0
-        elif j == n-1:
-            UN[i, j] = 1
+    VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
+        V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
+            dt/(2*rho*dx)*(P[i,j+1]-P[i,j-1])+\
+        nu*(dt/dx**2*(V[i+1,j]-2*V[i,j]+V[i-1,j])+\
+            dt/dy**2*(V[i,j+1]-2*V[i,j]+V[i,j-1]))
 
-        VN[i,j]=V[i,j]-U[i,j]*dt/dx*(V[i,j]-V[i-1,j])-\
-            V[i,j]*dt/dy*(V[i,j]-V[i,j-1])-\
-                dt/(2*rho*dx)*(P[i,j+1]-P[i,j-1])+\
-            nu*(dt/dx**2*(V[i+1,j]-2*V[i,j]+V[i-1,j])+\
-                dt/dy**2*(V[i,j+1]-2*V[i,j]+V[i,j-1]))
-
-        if i == 0:
-            VN[i, j] = 0
-        elif i == m-1:
-            VN[i, j] = 0
-        elif j == 0:
-            VN[i, j] = 0
-        elif j == n-1:
-            VN[i, j] = 0
+    if i == 0:
+        VN[i, j] = 0
+    elif i == m-1:
+        VN[i, j] = 0
+    elif j == 0:
+        VN[i, j] = 0
+    elif j == n-1:
+        VN[i, j] = 0
 
 
-        U[i,j] = UN[i,j]
-        V[i,j] = VN[i,j]
-
-
-        cuda.syncthreads()
+    U[i,j] = UN[i,j]
+    V[i,j] = VN[i,j]
 
 
 @autojit
@@ -105,9 +96,9 @@ def ppe(rho, dt, dx, dy, U, V, P):
 
 def main():
 
-    flowtime = 1.0
-    nx = 257
-    ny = 257
+    flowtime = 0.1
+    nx = 256 
+    ny = 256
     dx = 2.0/(nx-1)
     dy = 2.0/(ny-1)
 
@@ -122,6 +113,8 @@ def main():
     U[-1,:] = 1
     V = numpy.zeros((nx,ny), dtype=numpy.float32)
     P = numpy.zeros((ny, nx), dtype=numpy.float32)
+    UN = numpy.zeros((nx,ny), dtype=numpy.float32)
+    VN = numpy.zeros((nx,ny), dtype=numpy.float32)
 
     griddim = nx, ny
     blockdim = 768, 1, 1
@@ -132,12 +125,15 @@ def main():
     stream = cuda.stream()
     d_U = cuda.to_device(U, stream)
     d_V = cuda.to_device(V, stream)
+    d_UN = cuda.to_device(UN, stream)
+    d_VN = cuda.to_device(VN, stream)
 
-
-    CudaU[griddim, blockdim, stream](d_U, d_V, P, dx, dy, dt, rho, nu, nt)
-    d_U.to_host(stream)
-    d_V.to_host(stream)
-    stream.synchronize()
+    for i in range(nt):
+        P = ppe(rho, dt, dx, dy, U, V, P)
+        CudaU[griddim, blockdim, stream](d_U, d_V, P, d_UN, d_VN, dx, dy, dt, rho, nu)
+        d_U.to_host(stream)
+        d_V.to_host(stream)
+        stream.synchronize()
 
     t2 = time.time()
 
@@ -163,6 +159,12 @@ def main():
     #plt.title('Pressure contour')
     
     #plt.show()
+    f = open('cudajit_cavity', 'a')
+    f.write(str(nx)+'\n')
+    f.write(str(t2-t1) +'\n')
+    f.write(str(dt) + '\n')
+    f.write(str(nt) + '\n')
+    f.close()
 
     from ghiacompy import plotghiacomp
 

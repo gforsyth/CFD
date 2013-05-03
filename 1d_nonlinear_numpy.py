@@ -44,9 +44,9 @@ def NonLinCudaJit(u, dx, dt, un):
     un[i] = -u[i]*dt/dx*(u[i]-u[i-1])+u[i]
 
 
-def main():
+def main(nx):
     ##System Conditions    
-    nx = 8192
+    #nx = 8192
     nt = 300
     c = 1
     xmax = 15.0
@@ -60,7 +60,7 @@ def main():
     un = numpy.ones(nx)    
 
     t1 = time.time()
-    #u = NonLinNumpy(ui, un, nx, nt, dx, dt)
+    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
     t2 = time.time()
     print "Numpy version took: %.6f seconds" % (t2-t1)
     numpytime = t2-t1

@@ -7,7 +7,7 @@ from numbapro import autojit, cuda, jit, float32
 
 
 
-
+###1-D Nonlinear convection implemented using Numpy
 def NonLinNumpy(u, un, nx, nt, dx, dt):
 
     ###Run through nt timesteps and plot/animate each step
@@ -17,6 +17,7 @@ def NonLinNumpy(u, un, nx, nt, dx, dt):
     
     return u
 
+###1-D Nonlinear convection implemented using 'vanilla' Python
 def NonLinVanilla(u, nx, nt, dx, dt):
 
     for n in range(nt):
@@ -25,7 +26,7 @@ def NonLinVanilla(u, nx, nt, dx, dt):
 
     return u
 
-#@vectorize([float32[:], float32, float32, float32, float32, float32, float32], target='cpu')
+###1-D Nonlinear convection implemented using Numba JIT compiler (similar to LLVM)
 @autojit
 def NonLinNumba(u,un, nx, nt, dx, dt):
 
@@ -35,6 +36,7 @@ def NonLinNumba(u,un, nx, nt, dx, dt):
 
     return un
 
+###1-D Nonlinear convection implemented using NumbaPro CUDA-JIT
 @jit(argtypes=[float32[:], float32, float32, float32[:]], target='gpu')
 def NonLinCudaJit(u, dx, dt, un):
     tid = cuda.threadIdx.x
@@ -48,9 +50,9 @@ def NonLinCudaJit(u, dx, dt, un):
     un[i] = -u[i]*dt/dx*(u[i]-u[i-1])+u[i]
 
 
-def main(nx):
+def main():
     ##System Conditions    
-    #nx = 8192
+    nx = 8192
     nt = 300
     c = 1
     xmax = 15.0
@@ -63,13 +65,13 @@ def main(nx):
     ui[.5/dx:1/dx+1]=2 ##set hat function I.C. : .5<=x<=1 is 2
     un = numpy.ones(nx)    
 
-#    t1 = time.time()
-#    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
-#    t2 = time.time()
-#    print "Numpy version took: %.6f seconds" % (t2-t1)
-#    numpytime = t2-t1
-#    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
-#   
+    t1 = time.time()
+    u = NonLinNumpy(ui, un, nx, nt, dx, dt)
+    t2 = time.time()
+    print "Numpy version took: %.6f seconds" % (t2-t1)
+    numpytime = t2-t1
+    #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
+   
     t1 = time.time()
     u = NonLinNumba(ui, un, nx, nt, dx, dt)
     t2 = time.time()
@@ -77,8 +79,6 @@ def main(nx):
     vectime = t2-t1
     #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
-    #griddim = 10, 10      ##these work for nx = 2457600 
-    #blockdim = 768,32,1
     u = numpy.ones(nx)
     u[:] = ui[:]
     griddim = 320, 1
@@ -93,13 +93,14 @@ def main(nx):
     cudatime = t2-t1
     #plt.plot(numpy.linspace(0,xmax,nx),u[:],marker='o',lw=2)
 
-    f = open('times', 'a')
-    f.write(str(nx) + '\n')
-   # f.write(str(numpytime) + '\n')
-   # f.write(str(vectime) + '\n')
-    f.write(str(cudatime) + '\n')
-    f.close()
+    #f = open('times', 'a')
+    #f.write(str(nx) + '\n')
+    # f.write(str(numpytime) + '\n')
+    # f.write(str(vectime) + '\n')
+    #f.write(str(cudatime) + '\n')
+    #f.close()
 
+###Don't uncomment this unless nx < 500
 #    t1 = time.time()
 #    u = NonLinVanilla(ui, nx, nt, dx, dt)
 #    t2 = time.time()

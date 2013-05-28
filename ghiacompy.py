@@ -11,6 +11,5 @@ def plotghiacomp(U, Y):
     plt.plot(Re100, Ghia_Y, 'o')
     plt.plot(Re400, Ghia_Y, 'x')
 
-
     plt.plot(U, Y)
     plt.show()

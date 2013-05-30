@@ -1,10 +1,17 @@
-##2D Laplace
+##########2D Poisson##########
+####This code converges on a solution to Poisson's equation in two dimensions using the finite difference method.
+####
+####Boundary Conditions:
+####  p = 0 @ all borders
+####  b = 0 everywhere except at (.5, .5) and (1.5, 1.5)
+###############################
+##Requires python >= 2.7, numpy and matplotlib
+##############################
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-import numpy as np
-import os
+import numpy 
 
 plt.ion()
 
@@ -20,13 +27,13 @@ dt = sigma*dx*dy
 
 
 ##initial conditions
-p = np.zeros((ny,nx)) ##create a XxY vector of 0's
-pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
-b = np.zeros((ny,nx))
+p = numpy.zeros((ny,nx)) ##create a XxY vector of 0's
+pn = numpy.zeros((ny,nx)) ##create a XxY vector of 0's
+b = numpy.zeros((ny,nx))
 
 ##plotting aids
-x = np.linspace(0,2,nx)
-y = np.linspace(0,1,ny)
+x = numpy.linspace(0,2,nx)
+y = numpy.linspace(0,1,ny)
 
 ##boundary conditions
 p[:,0] = 0		##p = 0 @ x = 0
@@ -34,13 +41,13 @@ p[:,-1] = 0		##p = 0 @ x = 2
 p[0,:] = 0		##p = 0 @ y = 0
 p[-1,:] = 0		##p = 0 @ y = 1
 
-b[np.round(nx/4.0),np.round(ny/4.0)] = 100
-b[np.round(3*nx/4.0),np.round(3*ny/4.0)] = -100
+b[numpy.round(nx/4.0),numpy.round(ny/4.0)] = 100
+b[numpy.round(3*nx/4.0),numpy.round(3*ny/4.0)] = -100
 
 ##Initialize animation (plot ICs)
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-X,Y = np.meshgrid(x,y)
+X,Y = numpy.meshgrid(x,y)
 
 
 ##time loop

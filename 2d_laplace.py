@@ -1,10 +1,19 @@
-##2D Laplace
+##########2D Laplace##########
+####This code converges on a solution to Laplace's equation in two dimensions using the finite difference method.
+####
+####Boundary Conditions:
+####  p = 0 @ x = 0
+####  p = y @ x = 2
+####  dp/dy = 0 @ y = 0 & y = 1
+###############################
+##Requires python >= 2.7, numpy and matplotlib
+##############################
+
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-import numpy as np
-import os
+import numpy 
 
 plt.ion()
 
@@ -17,13 +26,13 @@ dy = 2.0/(ny-1)
 
 
 ##initial conditions
-p = np.zeros((ny,nx)) ##create a XxY vector of 0's
-pn = np.zeros((ny,nx)) ##create a XxY vector of 0's
+p = numpy.zeros((ny,nx)) ##create a XxY vector of 0's
+pn = numpy.zeros((ny,nx)) ##create a XxY vector of 0's
 
 
 ##plotting aids
-x = np.linspace(0,2,nx)
-y = np.linspace(0,1,ny)
+x = numpy.linspace(0,2,nx)
+y = numpy.linspace(0,1,ny)
 
 ##boundary conditions
 p[:,0] = 0		##p = 0 @ x = 0
@@ -34,7 +43,7 @@ p[-1,:] = p[-2,:]	##dp/dy = 0 @ y = 1
 ##Initialize animation (plot ICs)
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-X,Y = np.meshgrid(x,y)
+X,Y = numpy.meshgrid(x,y)
 surf = ax.plot_surface(X,Y,p[:], rstride=1, cstride=1, cmap=cm.coolwarm,
         linewidth=0, antialiased=False)
 ax.set_xlim(0,2)
@@ -55,7 +64,7 @@ while l1norm > .00001:
 	p[:,-1] = y		##p = y @ x = 2
 	p[0,:] = p[1,:]		##dp/dy = 0 @ y = 0
 	p[-1,:] = p[-2,:]	##dp/dy = 0 @ y = 1
-	l1norm = (np.sum(np.abs(p[:])-np.abs(pn[:])))/np.sum(np.abs(pn[:]))
+	l1norm = (numpy.sum(numpy.abs(p[:])-numpy.abs(pn[:])))/numpy.sum(numpy.abs(pn[:]))
 	n = n+1
 	if n%40 == 0:
 		surf.remove()
